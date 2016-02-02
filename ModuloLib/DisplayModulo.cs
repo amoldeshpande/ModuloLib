@@ -254,7 +254,7 @@ namespace ModuloLib
                 isRefreshing = false;
                 while(!(isEmpty()))
                 {
-                    Task.Delay(5);
+                    Task.Delay(5).Wait();
                 }
             }
         }
@@ -280,7 +280,7 @@ namespace ModuloLib
 
             while (!(isComplete()))
             {
-                Task.Delay(5);
+                Task.Delay(5).Wait();
             }
             transfer(FUNCTION_SET_CONTRAST, contrast, 0);
         }
