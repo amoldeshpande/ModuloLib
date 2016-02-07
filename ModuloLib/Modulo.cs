@@ -79,20 +79,20 @@ namespace ModuloLib
             }
             if(deviceId == null)
             {
-                ushort? devcId = port.getNextDeviceID(0);
+                ushort? devcId = port.GetNextDeviceID(0);
                 while(devcId != null)
                 {
                     Modulo m = port.findModuloById(devcId.Value);
                     if( m == null)
                     {
-                        String dt = port.getDeviceType(devcId.Value);
+                        String dt = port.GetDeviceType(devcId.Value);
                         if ( dt  == deviceType)
                         {
                             deviceId = devcId;
                             break;
                         }
                     }
-                    devcId = port.getNextDeviceID(devcId.Value);
+                    devcId = port.GetNextDeviceID(devcId.Value);
                 }
             }
             if(deviceId == null)

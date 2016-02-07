@@ -56,12 +56,15 @@ namespace ModuloLib
                                Action<Modulo,int> pressCallback = null,
                                Action<Modulo,int> releaseCallback = null)
         {
-            base.Initialize(port, "co.modulo.display", deviceId);
-            Width = 96;
-            Height = 64;
-            buttonPressCallback = pressCallback;
-            buttonReleaseCallback = releaseCallback;
-            return true;
+            if (base.Initialize(port, "co.modulo.display", deviceId))
+            {
+                Width = 96;
+                Height = 64;
+                buttonPressCallback = pressCallback;
+                buttonReleaseCallback = releaseCallback;
+                return true;
+            }
+            return false;
         }
         protected void sendOp(byte[] data)
         {

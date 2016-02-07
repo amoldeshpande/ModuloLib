@@ -1,2 +1,5 @@
 ModuloLib/obj/
 UnitTests/obj/
+UnitTests/project.lock.json
+UnitTests/bin/
+ModuloLib/bin/

@@ -14,7 +14,7 @@ namespace UnitTests
         public async Task TestSerialInit()
         {
             SerialConnection ser = new SerialConnection();
-            bool ret = await  ser.Initialize(null, 0);
+            bool ret = await ser.Initialize(null, 0);
             Assert.IsTrue(ret);
             ser.Close();
             ser.Dispose();
@@ -25,17 +25,18 @@ namespace UnitTests
             Port port = new Port();
             Assert.IsTrue(await port.Initialize(null));
             DisplayModulo display = new DisplayModulo();
-            Action<Modulo,int> resetLambda = (dsplay, btn) =>{              
-                                                                display.Clear();
-                                                                display.SetTextColor(1, 1, 1);
-                                                                display.Write("Press Button");
-                                                                display.Refresh();
-                                                            };
-            Assert.IsTrue( display.Initialize(port,null,
-                (dsply,btn)=>
+            Action<Modulo, int> resetLambda = (dsplay, btn) =>
+            {
+                display.Clear();
+                display.SetTextColor(1, 1, 1);
+                display.Write("Press Button");
+                display.Refresh();
+            };
+            Assert.IsTrue(display.Initialize(port, null,
+                (dsply, btn) =>
                 {
                     display.Clear();
-                    switch(btn)
+                    switch (btn)
                     {
                         case 0:
                             display.SetTextColor(1, 0, 0);
@@ -53,14 +54,14 @@ namespace UnitTests
                     display.Write(" Button " + btn);
                     display.Refresh();
                 },
-                (dsplay,btn) =>
+                (dsplay, btn) =>
                 {
                     resetLambda(display, btn);
                 }
                 ));
 
-            resetLambda(display,0);
-            
+            resetLambda(display, 0);
+
             port.RunForever();
             display.Dispose();
             port.Close();
@@ -77,9 +78,9 @@ namespace UnitTests
             bool posChange = false;
 
             Assert.IsTrue(knob.Initialize(port,
-                    null,                    
                     null,
-                    (knb)=>
+                    null,
+                    (knb) =>
                     {
                         buttonRelease = true;
                     },
@@ -88,16 +89,16 @@ namespace UnitTests
                         posChange = true;
                     }
                     ));
-            while(port.Loop())
+            while (port.Loop())
             {
-                if(buttonRelease)
+                if (buttonRelease)
                 {
                     display.Clear();
                     display.Write("knob done");
                     display.Refresh();
                     break;
                 }
-                if(posChange)
+                if (posChange)
                 {
                     int angle = knob.GetAngle();
                     display.Clear();
@@ -112,8 +113,8 @@ namespace UnitTests
             display.Dispose();
             knob.Dispose();
             port.Close();
-        }        
-        private void draw_crosshairs(DisplayModulo display, int x, int y , bool selected)
+        }
+        private void draw_crosshairs(DisplayModulo display, int x, int y, bool selected)
         {
             float[] CROSSHAIR_COLOR = { 0.4f, 0.4f, 0.4f, 1.0f };//     # Gray
             float[] DOT_COLOR_DESELECTED = { 0.4f, 0.4f, 0.4f, 1.0f };//  # Gray
@@ -162,27 +163,100 @@ namespace UnitTests
             Joystick joystick = new Joystick();
 
             Assert.IsTrue(await port.Initialize(null));
-            Assert.IsTrue(display.Initialize(port,null,(dsp,nt)=> { shouldExit = true; }));
-            Assert.IsTrue(joystick.Initialize(port,null,changeLambda,null,changeLambda));
+            Assert.IsTrue(display.Initialize(port, null, (dsp, nt) => { shouldExit = true; }));
+            Assert.IsTrue(joystick.Initialize(port, null, changeLambda, null, changeLambda));
 
             byte max_x = (byte)(display.Width - 1);
             byte max_y = (byte)(display.Height - 1);
-            while(port.Loop())
+            while (port.Loop())
             {
-                if(joyStickChanged)
+                if (joyStickChanged)
                 {
                     joyStickChanged = false;
                     int screen_x = (int)(max_x / 2.0f - max_x / 2.0f * joystick.GetHPos());
-                    int screen_y = (int)(max_y / 2.0f - max_y/ 2.0f * joystick.GetVPos());
-                    draw_crosshairs(display,screen_x, screen_y, joystick.GetButtonState());
+                    int screen_y = (int)(max_y / 2.0f - max_y / 2.0f * joystick.GetVPos());
+                    draw_crosshairs(display, screen_x, screen_y, joystick.GetButtonState());
                 }
-                if(shouldExit)
+                if (shouldExit)
                 {
                     break;
                 }
             }
             display.Dispose();
             joystick.Dispose();
+            port.Close();
+        }
+        [TestMethod]
+        public async Task TemperatureProbEventsDisplayTutorial()
+        {
+            bool shouldExit = false;
+            bool tempChanged = true;
+            Action<Modulo> changeLambda = (joy) => { tempChanged = true; };
+
+            Port port = new Port();
+            DisplayModulo display = new DisplayModulo();
+            TemperatureProbe tempProbe = new TemperatureProbe();
+
+            Assert.IsTrue(await port.Initialize(null));
+            Assert.IsTrue(display.Initialize(port, null, (dsp, nt) => { shouldExit = true; }));
+            Assert.IsTrue(tempProbe.Initialize(port, null, changeLambda));
+
+            display.Clear();
+            while (port.Loop())
+            {
+                if (tempChanged)
+                {
+                    display.SetCursor(0, 0);
+                    display.Write("Temp C " + tempProbe.GetTemperatureCelsius() 
+                        + "\r\ndeg F " + tempProbe.GetTemperatureFahrenheit());
+                    display.Refresh();
+                }
+                if (shouldExit)
+                {
+                    break;
+                }
+            }
+            display.Dispose();
+            tempProbe.Dispose();
+            port.Close();
+        }
+        [TestMethod]
+        public async Task IRRemoteEventsDisplayTutorial()
+        {
+            bool shouldExit = false;
+            bool stringChanged = false;
+            String codeString = String.Empty;
+            Action<IRRemote, sbyte, int, ushort[], int> dataReceivedCallback
+                    = (rem, protocol, value, extdata, exlen) =>
+                    {
+                        codeString = String.Format("Protocol {0:X} {1:X} ex len {2}", protocol, value, exlen);
+                        System.Diagnostics.Debug.WriteLine("String " + codeString);
+                        stringChanged = true;
+                    };
+            Port port = new Port();
+            DisplayModulo display = new DisplayModulo();
+            IRRemote irRemote = new IRRemote();
+            Assert.IsTrue(await port.Initialize(null));
+            Assert.IsTrue(display.Initialize(port, null, (dsp, nt) => { shouldExit = true; }));
+            Assert.IsTrue(irRemote.Initialize(port, null, dataReceivedCallback));
+
+            display.Clear();
+            while (port.Loop())
+            {
+                if (stringChanged)
+                {
+                    display.SetCursor(0, 0);
+                    display.Write(codeString);
+                    display.Refresh();
+                    stringChanged = false;
+                }
+                if (shouldExit)
+                {
+                    break;
+                }
+            }
+            display.Dispose();
+            irRemote.Dispose();
             port.Close();
         }
     }

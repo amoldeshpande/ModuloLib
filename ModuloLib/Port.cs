@@ -129,7 +129,7 @@ namespace ModuloLib
             }
             return null;
         }
-        internal ushort? getNextDeviceID(ushort lastDeviceId)
+        public ushort? GetNextDeviceID(ushort lastDeviceId)
         {
             return getDeviceId(lastDeviceId, kBroadcastCommandGetNextDeviceID);
         }
@@ -167,7 +167,7 @@ namespace ModuloLib
             }
             return null;
         }
-        internal String getDeviceType(ushort deviceId)
+        public String GetDeviceType(ushort deviceId)
         {
             byte[] sendData = new byte[] { (byte)(deviceId & 0xFF), (byte)(deviceId >> 8) };
             byte[] result = connection.transfer(kBroadcastAddress, kBroadcastCommandGetDeviceType, sendData, 31);
