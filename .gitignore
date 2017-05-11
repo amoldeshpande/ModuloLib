@@ -1,5 +1,9 @@
+.vs/
+ModuloLib/project.lock.json
 ModuloLib/obj/
 UnitTests/obj/
 UnitTests/project.lock.json
 UnitTests/bin/
 ModuloLib/bin/
+*.suo
+*.user
